@@ -1,11 +1,9 @@
-// #include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-// #include <crtdbg.h>
 
 using namespace std;
 
@@ -126,7 +124,6 @@ public:
 		hrml_tag_name_{ hrml_tag_name }, start_tag_pos_{ start_pos }, end_tag_pos_{ end_pos }, is_end_tag_{ is_end_tag } { }
 	
 
-	// hrml_tag_position getters
 	const string& get_hrml_tag_name() const noexcept { return hrml_tag_name_; }
 	size_t get_hrml_start_tag_position() const noexcept { return start_tag_pos_; }
 	size_t get_hrml_end_tag_position() const noexcept { return end_tag_pos_; }
@@ -134,7 +131,6 @@ public:
 	size_t get_hrml_tag_nesting_level() const noexcept { return nesting_level_; }	
 	const vector<hrml_attribute>& get_hrml_tag_attributes() const noexcept { return attributes_; }
 
-	// hrml_tag_position setters
 	void set_hrml_tag_name(const string& hrml_tag_name) { hrml_tag_name_ = hrml_tag_name; }
 	void set_hrml_start_tag_position(const size_t start_pos) { start_tag_pos_ = start_pos; }
 	void set_hrml_end_tag_position(const size_t end_pos) { end_tag_pos_ = end_pos; }
@@ -146,45 +142,44 @@ public:
 
 string trim(const string& str)
 {
-	size_t begin{};
-	auto end{str.size() - 1};
+	const size_t str_len{ str.length() };
 
-	if (0u == str.length()) return string{};
+	if (!str_len) return string{};
 
-	for (; begin <= end; ++begin)
+	size_t first{}, last{ str_len - 1 };
+
+	for (; first <= last; ++first)
 	{
-		if (!isspace(str[begin])) break;
+		if (!isspace(str[first])) break;
 	}
 
-	if (begin > end) return string{};
+	if (first > last) return string{};
 
-	for (; end > begin; --end)
+	for (; last > first; --last)
 	{
-		if (!isspace(str[end])) break;
+		if (!isspace(str[last])) break;
 	}
 
-	return str.substr(begin, end - begin + 1);
+	return str.substr(first, last - first + 1);
 }
 
 vector<string> split(const string& source, const char* needle, size_t const max_count = string::npos)
 {
 	vector<string> parts{};
 
-	size_t prev = 0, current;
+	string needle_st { needle };
 
-	string needle_st{needle};
+	const size_t source_len{ source.length() };
 
-	const auto source_len{source.length()};
+	const size_t needle_len{ needle_st.size() };
 
-	const auto needle_len{needle_st.size()};
+	if ((0u == source_len) || (0u == needle_len)) return parts;
 
-	if ((0u == source_len) || (0u == needle_len) || (needle_len >= source_len)) return parts;
+	size_t number_of_parts{}, prev{};
 
-	size_t number_of_parts = 0;
-
-	do
+	while (true)
 	{
-		current = source.find(needle_st, prev);
+		const size_t current { source.find(needle_st, prev) };
 
 		if (string::npos == current) break;
 
@@ -198,9 +193,8 @@ vector<string> split(const string& source, const char* needle, size_t const max_
 
 		if (prev >= source_len) break;
 	}
-	while (string::npos != current);
 
-	if (number_of_parts > 0 && prev < source_len)
+	if (prev < source_len)
 	{
 		if (string::npos == max_count) parts.emplace_back(source.substr(prev));
 
@@ -232,31 +226,56 @@ vector<hrml_attribute> parse_hrml_tag_attributes(string hrml_tag_data);
 
 string process_query(const string&, vector<hrml_tag_position>&);
 
+bool write_test_data_to_file(const string& file_path, const vector<string>& lines) {
+
+	ofstream output(file_path, ios_base::out);
+
+	if (!output) return false;
+
+	for (const string& line : lines) {
+		output << line << '\n';
+	}
+
+	output.flush();
+	output.close();
+
+	return true;
+}
+
 int main()
 {
 	int n{}, q{};
-	
-	// ifstream input(R"(G:\Programming\input02.txt)", ios_base::in);
-	// if (!input) return 1;
-	// input >> n;
 
-	cin >> n;
+	const string file_path {"test_data.lst"};
+
+	const vector<string> lines_of_test_data {"6 4", R"(<a>)", R"(<b name = "tag_one">)", R"(<c name = "tag_two" value = "val_907">)", R"(</c>)",
+								R"(</b>)", R"(</a>)", R"(a.b~name)", R"(a.b.c~value)", R"(a.b.c~src)", R"(a.b.c.d~name)" };
+
+	if (!write_test_data_to_file(file_path, lines_of_test_data)) return 0;
+	
+	ifstream input(file_path, ios_base::in);
+	
+	if (!input) return 1;
+
+	input >> n;
+
+	// cin >> n;
 	if (n < 1) return 2;
 
-	// input >> q;
+	input >> q;
 	// cin >> q;
 	if (q < 1) return 3;
 
 	string hrml_data_line{};
 	string hrml_document{};
 
-	// getline(input, hrml_data_line);
-	getline(cin, hrml_data_line);
+	getline(input, hrml_data_line);
+	// getline(cin, hrml_data_line);
 
 	for (auto i = 0; i < n; i++)
 	{
-		// getline(input, hrml_data_line);
-		getline(cin, hrml_data_line);
+		getline(input, hrml_data_line);
+		// getline(cin, hrml_data_line);
 		hrml_document += trim(hrml_data_line);
 	}
 
@@ -284,12 +303,12 @@ int main()
 
 	for (auto i = 0; i < q; i++)
 	{
-		// getline(input, hrml_query_data_line);
-		getline(cin, hrml_query_data_line);
+		getline(input, hrml_query_data_line);
+		// getline(cin, hrml_query_data_line);
 		queries.emplace_back(trim(hrml_query_data_line));
 	}
 
-	// input.close();
+	input.close();
 
 	for (const auto& query : queries)
 	{
@@ -317,7 +336,6 @@ bool check_is_hrml_document_correctly_structured(const string& hrml_document,
 			{
 				number_of_start_tags++;
 
-				// <a><b size = "20><c height = "24"></c></b></a>
 				end_tag_pos = first_start_tag_pos + 1;
 
 				const auto ecp1{ hrml_document.find(' ', end_tag_pos) };
@@ -509,9 +527,9 @@ vector<hrml_attribute> parse_hrml_tag_attributes(string hrml_tag_data)
 		
 		hrml_tag_attributes.emplace_back(hrml_tag_attribute_name, hrml_tag_attribute_value);
 		
-		attributes_line.assign(attributes_line.substr(end_pos + 1)); // " "
+		attributes_line.assign(attributes_line.substr(end_pos + 1));
 
-		start_pos = attributes_line.find_first_not_of(" \t\n\f\v\r<>"); // -> string::npos
+		start_pos = attributes_line.find_first_not_of(" \t\n\f\v\r<>");
 
 	}
 
